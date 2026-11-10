@@ -1,6 +1,6 @@
 # Model card: Engagement Early-Warning (disengagement onset)
 
-**Status:** research prototype on open data. Not a production system and not affiliated with any company or product.
+**Status:** research prototype on open data. Live demo: https://engagement-early-warning.streamlit.app/. Not a production system and not affiliated with any company or product.
 **Live demo:** https://engagement-early-warning.streamlit.app/
 
 ## What it predicts

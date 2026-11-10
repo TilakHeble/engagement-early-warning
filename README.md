@@ -10,7 +10,9 @@ withdrawal date, which lags it. Every result is judged the way a student-support
 staff time, who is reached, how early, and is it fair? Not affiliated with any company or product.
 
 [![Open the live dashboard](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://engagement-early-warning.streamlit.app/)
-[![tests](https://github.com/TilakHeble/engagement-early-warning/actions/workflows/tests.yml/badge.svg)](https://github.com/TilakHeble/engagement-early-warning/actions/workflows/tests.yml)
+**Live dashboard: [engagement-early-warning.streamlit.app](https://engagement-early-warning.streamlit.app/)**
+
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://engagement-early-warning.streamlit.app/) [![tests](https://github.com/TilakHeble/engagement-early-warning/actions/workflows/tests.yml/badge.svg)](https://github.com/TilakHeble/engagement-early-warning/actions/workflows/tests.yml)
 
 **[Live dashboard](https://engagement-early-warning.streamlit.app/)** · [Model card](docs/model_card.md) · [Build log: every decision and negative result](docs/build_log.md)
 
@@ -33,7 +35,7 @@ All results are on held-out module presentations, with 95% bootstrap intervals o
 
 [![Dashboard](docs/figures/dashboard.png)](https://engagement-early-warning.streamlit.app/)
 
-A Streamlit app ([`dashboards/app.py`](dashboards/app.py)) showing each week's contact list for a module (risk plus
+A Streamlit app, [live here](https://engagement-early-warning.streamlit.app/) ([`dashboards/app.py`](dashboards/app.py)), showing each week's contact list for a module (risk plus
 plain-English warning signs, with a cool-down so recently contacted students are skipped), capacity planning, and
 the evidence on performance, fairness and transfer. It runs on a small committed snapshot, so it deploys without the
 raw data:
