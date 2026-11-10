@@ -123,3 +123,40 @@ def band_rule_metrics(
         "recall": float(tp.sum() / max(y.sum(), 1)),
         "precision": float(tp.sum() / max(flagged.sum(), 1)),
     }
+
+
+def paired_difference(
+    df: pd.DataFrame,
+    score_a: str,
+    score_b: str,
+    capacity: float,
+    target: str = "will_withdraw",
+    n_boot: int = 2000,
+    seed: int = 0,
+) -> dict[str, float]:
+    """Precision and recall of score_a minus score_b, with a paired bootstrap interval.
+
+    Both scores are evaluated on the same resampled presentations in each bootstrap
+    draw, so the interval reflects the uncertainty in the *difference*, which is
+    narrower than comparing two separate intervals.
+    """
+    y = df[target].astype(bool)
+    ca = _per_presentation(df, y, flag_top(df, score_a, capacity))
+    cb = _per_presentation(df, y, flag_top(df, score_b, capacity)).reindex(ca.index)
+    a = ca[["pos", "flag", "tp"]].to_numpy(dtype=float)
+    b = cb[["pos", "flag", "tp"]].to_numpy(dtype=float)
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, len(a), size=(n_boot, len(a)))
+    sa, sb = a[idx].sum(axis=1), b[idx].sum(axis=1)
+    d_prec = sa[:, 2] / np.maximum(sa[:, 1], 1) - sb[:, 2] / np.maximum(sb[:, 1], 1)
+    d_rec = sa[:, 2] / np.maximum(sa[:, 0], 1) - sb[:, 2] / np.maximum(sb[:, 0], 1)
+    pa, pb = a.sum(0), b.sum(0)
+    return {
+        "d_precision": float(pa[2] / max(pa[1], 1) - pb[2] / max(pb[1], 1)),
+        "d_precision_lo": float(np.percentile(d_prec, 2.5)),
+        "d_precision_hi": float(np.percentile(d_prec, 97.5)),
+        "d_recall": float(pa[2] / max(pa[0], 1) - pb[2] / max(pb[0], 1)),
+        "d_recall_lo": float(np.percentile(d_rec, 2.5)),
+        "d_recall_hi": float(np.percentile(d_rec, 97.5)),
+        "p_a_not_better": float((d_prec <= 0).mean()),
+    }

@@ -63,3 +63,24 @@ arrow overlap fixed, and Windows run instructions added to the README.
 
 **Implication for later stages:** a useful flag must come *before* a student goes silent. Stage 3 models
 are judged on warning time before last activity, not just on precision.
+
+## 2026-11-10: stage 2, research-led features (`notebooks/02_features.ipynb`)
+
+- Features (`src/eew/features.py`), 23 in 7 groups: level, regularity, recency, trajectory (vs the student's
+  own earlier activity), cohort-relative, assessment behaviour, and study context. Demographics are never used.
+- Leakage controls: only clicks before the cutoff; an assessment counts as due/submitted only before the cutoff;
+  scores are used only for submissions made 14+ days before the cutoff (OULAD has no release date). A unit
+  test injects future clicks and submissions and checks that no feature changes.
+- Model: logistic regression per week, with 5-fold CV **grouped by module presentation**. Gradient boosting
+  gave the same AUC, so the simpler model was kept.
+- Added `evaluate.paired_difference`: a paired bootstrap over presentations for model-minus-baseline differences.
+- **Results (will withdraw, 10% capacity):** precision +6.2 to +10.6 pp over the baseline from week 4 (paired
+  intervals exclude 0), e.g. week 8 is 0.33 vs 0.22; AUC 0.66–0.70 vs 0.60. Week 2 shows no reliable gain.
+- **Warning before last activity:** 1.6–2.6 weeks (baseline: −1 to −2.4 from week 8). The share of catches
+  already silent falls from about 54% to 34–38%.
+- **Ablation:** assessment behaviour carries most of the signal (AUC loss 0.04–0.075); cohort-relative
+  features come second (0.01–0.018).
+- **Negative result:** trajectory (drop from own baseline) and recency add nothing measurable in this linear
+  model. Recorded as not supported; to be retested in the stage 3 time-to-event model.
+- Coefficients saved (`results/stage2_coefficients.csv`) but not interpreted: correlated features (e.g.
+  active_share and its cohort percentile) give unstable, opposite-signed coefficients.

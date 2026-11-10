@@ -98,3 +98,18 @@ def test_bootstrap_ci_brackets_point_estimate():
     assert m["recall_lo"] <= m["recall"] <= m["recall_hi"]
     assert m["precision_lo"] <= m["precision"] <= m["precision_hi"]
     assert 0 < m["max_recall"] <= 1
+
+
+def test_paired_difference_detects_better_score():
+    rng = np.random.default_rng(2)
+    rows = []
+    for p in range(15):
+        for i in range(60):
+            y = rng.random() < 0.2
+            rows.append({"code_module": f"M{p}", "code_presentation": "2013J", "will_withdraw": y,
+                         "good": y + rng.random() * 0.8, "noise": rng.random()})
+    df = pd.DataFrame(rows)
+    d = evaluate.paired_difference(df, "good", "noise", 0.10)
+    assert d["d_precision_lo"] > 0 and d["p_a_not_better"] < 0.01
+    same = evaluate.paired_difference(df, "noise", "noise", 0.10)
+    assert same["d_precision"] == 0
