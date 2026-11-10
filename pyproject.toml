@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "engagement-early-warning"
+version = "0.1.0"
+description = "Predicting which university students need support before they disengage, using the open OULAD dataset."
+authors = [{ name = "Tilak Heble", email = "tilakheble@gmail.com" }]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.0",
+    "pyarrow>=14",
+    "numpy>=1.24",
+    "scikit-learn>=1.3",
+    "lifelines>=0.27",
+    "matplotlib>=3.7",
+    "streamlit>=1.30",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "jupyter", "ruff"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
