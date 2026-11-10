@@ -9,7 +9,7 @@ would use it: *with limited tutor time, how many future withdrawals do we catch,
 Built on the open [Open University Learning Analytics Dataset (OULAD)](https://research.stem.open.ac.uk/ouanalyse/dataset/)
 (32,593 enrolments, 22 module presentations, 10.6M daily click records). Not affiliated with any company or product.
 
-> Status: stages 1–5 complete. Stages 6–7 in progress.
+> Status: stages 1–6 complete. Stage 7 (tutor dashboard) in progress.
 
 ## Findings so far (stage 1)
 
@@ -86,6 +86,21 @@ Full analysis: [`notebooks/04_outreach_policy.ipynb`](notebooks/04_outreach_poli
 
 Full analysis: [`notebooks/05_fairness.ipynb`](notebooks/05_fairness.ipynb).
 
+## Stage 6: would it work at a new university?
+
+![Unseen modules](docs/figures/stage6_unseen_module.png)
+
+- **The weekly contact list transfers to modules the model has never seen.** It catches 22.9% of upcoming
+  disengagements, against 23.9% when the module was seen in training (−0.9 points); trained on 2013 and tested on
+  2014, the drop is similar. A module's own history adds little to the ranking.
+- **Probabilities do not transfer per module:** predicted risk is off by a factor of 0.7–2.4 depending on the module.
+- **One completed local run fixes most of this** when the correction is shrunk for small samples (mean error
+  0.44 → 0.22; worst module off by 1.5× instead of 2.4×).
+- **For a new client:** use the ranked list from day one, and treat probabilities as provisional until each module
+  has completed one run.
+
+Full analysis: [`notebooks/06_transfer.ipynb`](notebooks/06_transfer.ipynb).
+
 ## Approach
 
 | Stage | Question |
@@ -95,7 +110,7 @@ Full analysis: [`notebooks/05_fairness.ipynb`](notebooks/05_fairness.ipynb).
 | 3. Week-by-week risk model ✅ | A discrete-time survival model: risk of withdrawing in each week, using only data available up to that week (no leakage) |
 | 4. Capacity-aware evaluation ✅ | With 10% tutor capacity per week: precision, recall (with bootstrap intervals), and warning time before last activity |
 | 5. Fairness and inclusion audit ✅ | Demographics are never model inputs; calibration and miss rates are audited by disability, deprivation (IMD) band and age |
-| 6. Generalising to new modules | Train on some modules, test on unseen ones: a proxy for rolling out to a new institution |
+| 6. Generalising to new modules ✅ | Train on some modules, test on unseen ones: a proxy for rolling out to a new institution |
 | 7. Tutor dashboard | A weekly list of flagged students with a plain-English reason for each flag |
 
 ## Getting the data

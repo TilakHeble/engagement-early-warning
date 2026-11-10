@@ -145,3 +145,22 @@ are judged on warning time before last activity, not just on precision.
   23.9% → 24.2% and precision 8.3% → 8.4%. Term coverage for disabled withdrawers rises 57% → 74% (others
   50% → 48%). It uses a protected characteristic (Equality Act 2010), so it is presented as an institutional
   choice, not a default.
+
+## 2026-11-10: stage 6, transfer to unseen modules and years (`notebooks/06_transfer.ipynb`)
+
+- `src/eew/transfer.py`: leave-one-module-out; forward in time (train on 2013, test on 2014); and own-module
+  history (2014 predictions with vs without the module's 2013 run in training). Tests check that no split trains
+  on the module or year it predicts.
+- **Ranking transfers.** Unseen module: recall 22.9% vs 23.9% (−0.9 pp [−1.6, −0.2]); AUC 0.66 vs 0.70.
+  2013→2014: −0.9 pp [−1.6, +0.1]. Own-module history: +0.9 pp [−0.1, +1.8], not significant.
+  GGG is weak in every setting (rare events, AUC 0.51–0.59).
+- **Probabilities do not transfer per module.** The cold-start predicted/observed ratio ranges 0.68–2.39 (mean
+  |log ratio| 0.44). Even the stage 3 validation model is off by up to 2.4× for some modules: stage 3's
+  "calibrated in aggregate" did not mean calibrated per module.
+- **One-run local recalibration** (odds scaled by observed/predicted on the module's completed 2013 run):
+  raw = 0.30 mean / 0.95 worst, overcorrecting GGG (2013J onset rate ~0.3%). Shrinking log(factor) by
+  events/(events+100), with k fixed in advance as a rule of thumb, gives 0.22 mean / 0.41 worst (a factor of 1.5),
+  better than stage 3 validation (0.29). k from 50 to 200 gives similar results; only 6 modules, so this is
+  indicative.
+- **Deployment recommendation:** use the ranked list from day one; treat probabilities as provisional until each
+  module has one completed run; then recalibrate per module with shrinkage.

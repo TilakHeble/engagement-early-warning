@@ -1,0 +1,4 @@
+comparison,difference,lo,hi
+Module never seen - stage 3 validation (all presentations),-0.009477825464949928,-0.01597272788376444,-0.001809120468684621
+2013-trained (incl. own module) - stage 3 validation (2014),-0.009074941451990632,-0.01573192836999203,0.0008990186961007011
+"Own-module history: with - without (2014, modules with a 2013 run)",0.00880853036624942,-0.0009277750701023765,0.017857142857142856

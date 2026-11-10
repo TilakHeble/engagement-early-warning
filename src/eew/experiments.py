@@ -280,3 +280,80 @@ def run_stage5(n_boot: int = 1000) -> dict[str, pd.DataFrame]:
     for name, df in out.items():
         df.to_csv(RESULTS_DIR / f"stage5_{name}.csv", index=False)
     return out
+
+
+# --------------------------------------------------------------------------------------
+# Stage 6: transfer to unseen modules and years
+# --------------------------------------------------------------------------------------
+
+def run_stage6() -> dict[str, pd.DataFrame]:
+    from eew import transfer as T
+
+    data = build_landmark_data()
+    oof = landmark_predictions()
+    key = ["code_module", "code_presentation", "id_student", "week"]
+    data = data.merge(oof[key + ["p_landmark_gbm"]], on=key, how="left")
+    data["p_unseen_module"] = T.leave_one_module_out(data, F.FEATURES)
+    with_h, without_h = T.forward_in_time(data, F.FEATURES)
+    data["p_2013_with_history"], data["p_2013_without_history"] = with_h, without_h
+
+    cap = CONTACT_CAPACITY
+    # 1. Unseen module vs stage 3 validation (other presentations of the same module seen).
+    lomo = []
+    for module, g in data.groupby("code_module"):
+        for score, name in [("p_landmark_gbm", "Stage 3 validation (module seen)"),
+                            ("p_unseen_module", "Module never seen")]:
+            lomo.append({"module": module, "setting": name, **T.summarise(g, score, cap)})
+    for score, name in [("p_landmark_gbm", "Stage 3 validation (module seen)"),
+                        ("p_unseen_module", "Module never seen")]:
+        lomo.append({"module": "All", "setting": name, **T.summarise(data, score, cap)})
+    lomo_diff = T.paired_recall_difference(data, "p_unseen_module", "p_landmark_gbm", cap)
+
+    # 2-3. Forward in time (2014 test), with / without the module's own 2013 history.
+    test = data[data["code_presentation"].str.startswith("2014")]
+    fwd = []
+    for module, g in list(test.groupby("code_module")) + [("All", test)]:
+        for score, name in [("p_landmark_gbm", "Stage 3 validation"),
+                            ("p_2013_with_history", "Trained on 2013, incl. own module"),
+                            ("p_2013_without_history", "Trained on 2013, without own module")]:
+            fwd.append({"module": module, "setting": name, **T.summarise(g, score, cap)})
+    has_history = test[test["code_module"] != "CCC"]  # CCC has no 2013 run
+    diffs = pd.DataFrame([
+        {"comparison": "Module never seen - stage 3 validation (all presentations)", **lomo_diff},
+        {"comparison": "2013-trained (incl. own module) - stage 3 validation (2014)",
+         **T.paired_recall_difference(test, "p_2013_with_history", "p_landmark_gbm", cap)},
+        {"comparison": "Own-module history: with - without (2014, modules with a 2013 run)",
+         **T.paired_recall_difference(has_history, "p_2013_with_history", "p_2013_without_history", cap)},
+    ])
+    out = {"unseen_module": pd.DataFrame(lomo), "forward_in_time": pd.DataFrame(fwd), "differences": diffs}
+    for name, df in out.items():
+        df.to_csv(RESULTS_DIR / f"stage6_{name}.csv", index=False)
+    return out
+
+
+def run_stage6_calibration() -> pd.DataFrame:
+    """Module-level calibration in 2014: cold-start model vs one-run local recalibration."""
+    from eew import transfer as T
+
+    data = build_landmark_data()
+    rec = T.local_recalibration(data, F.FEATURES, shrink_k=100)
+    raw = T.local_recalibration(data, F.FEATURES, shrink_k=None)
+    rec["p_local_raw"] = raw["p_local_recal"].to_numpy()
+    sens = []
+    for k in [None, 25, 50, 100, 200, 400]:
+        r = T.local_recalibration(data, F.FEATURES, shrink_k=k)
+        t = T.calibration_by_module(r, "p_local_recal")
+        sens.append({"shrink_k": "none" if k is None else k, "mean_abs_log_ratio": t["abs_log_ratio"].mean(),
+                     "max_abs_log_ratio": t["abs_log_ratio"].max()})
+    pd.DataFrame(sens).to_csv(RESULTS_DIR / "stage6_shrinkage_sensitivity.csv", index=False)
+    oof = landmark_predictions()
+    key = ["code_module", "code_presentation", "id_student", "week"]
+    rec = rec.merge(oof[key + ["p_landmark_gbm"]], on=key, how="left")
+    tabs = []
+    for score, name in [("p_landmark_gbm", "Stage 3 validation"), ("p_cold", "Cold start (module never seen)"),
+                        ("p_local_raw", "One-run recalibration (raw)"),
+                        ("p_local_recal", "One-run recalibration (shrunk, k=100)")]:
+        tabs.append(T.calibration_by_module(rec, score).reset_index().assign(setting=name))
+    out = pd.concat(tabs, ignore_index=True)
+    out.to_csv(RESULTS_DIR / "stage6_module_calibration.csv", index=False)
+    return out
