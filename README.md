@@ -162,10 +162,13 @@ make data      # builds data/processed/*.parquet
 make test
 ```
 
+Use **Python 3.10–3.13**. Python 3.14+ is too new for some dependencies (e.g. `pyyaml`, needed by Streamlit,
+has no ready-built wheel), so pip tries to compile them and fails without Microsoft C++ Build Tools.
+
 Windows (PowerShell), or anywhere without `make`:
 
 ```powershell
-python -m venv .venv
+py -3.12 -m venv .venv     # or any installed 3.10-3.13
 .venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
 python -m eew.data

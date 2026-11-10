@@ -125,7 +125,7 @@ def paired_coverage_difference(
     a: pd.DataFrame, b: pd.DataFrame, n_boot: int = 2000, seed: int = 0
 ) -> dict[str, float]:
     """Coverage of policy a minus policy b, with a paired bootstrap over presentations."""
-    j = a.join(b, lsuffix="_a", rsuffix="_b")
+    j = a.merge(b, left_index=True, right_index=True, how="left", suffixes=("_a", "_b"))
     arr = j[["targets_a", "reached_a", "reached_b"]].to_numpy(dtype=float)
     rng = np.random.default_rng(seed)
     idx = rng.integers(0, len(arr), size=(n_boot, len(arr)))

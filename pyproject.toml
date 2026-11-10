@@ -9,7 +9,7 @@ description = "Predicting which university students need support before they dis
 authors = [{ name = "Tilak Heble", email = "tilakheble@gmail.com" }]
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.14"
 dependencies = [
     "pandas>=2.0",
     "pyarrow>=14",
