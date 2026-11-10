@@ -125,3 +125,23 @@ are judged on warning time before last activity, not just on precision.
   - **Cool-down sensitivity** (model, 5%/week): 0 weeks → 30% reached; 4 → 51%; 12 → 61%. Contacts reaching a
     student who withdraws fall from 32% to 20%. This is a breadth-vs-focus policy choice.
 - Caveat recorded: the policy settings were explored on the same data as the evaluation (scores are out-of-fold).
+
+## 2026-11-10: stage 5, fairness audit (`notebooks/05_fairness.ipynb`)
+
+- `src/eew/fairness.py`: demographic groups are joined to held-out stage 3 predictions for auditing only.
+  Metrics per group are miss rate, flag rate, precision, calibration ratio (predicted ÷ observed) and AUC, with
+  clustered bootstrap intervals over presentations; paired gaps are taken against a reference group. Small
+  categories are merged (55+ into 35+; education into 3 levels; IMD into quintiles, normalising a "10-20" label
+  in the raw data).
+- **Results** (weeks 2–12, 10% capacity):
+  - Disability: base rate 5.2% vs 3.3%; calibration 0.75 vs 1.06 (gap −0.31 [−0.44, −0.19]). Risk is understated
+    by about a quarter. Over a term, disabled withdrawers are still reached slightly more (57% vs 50%).
+  - Education: A-level students over-predicted (1.18), below-A-level 0.87 (gap −0.31). Students with a degree or
+    higher are missed 8.0 pp more [3.1, 12.2] and reached least over a term (45%).
+  - Age: 35+ missed 6.3 pp more [3.7, 9.2]; term coverage 47% vs 53%.
+  - Deprivation: the most deprived quintile is missed less (−6.8 pp); calibration acceptable throughout.
+  - Gender: no meaningful gaps.
+- **Mitigation tested:** cross-fitted recalibration by disability brings calibration to 0.98, with overall recall
+  23.9% → 24.2% and precision 8.3% → 8.4%. Term coverage for disabled withdrawers rises 57% → 74% (others
+  50% → 48%). It uses a protected characteristic (Equality Act 2010), so it is presented as an institutional
+  choice, not a default.

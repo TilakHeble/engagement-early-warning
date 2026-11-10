@@ -220,3 +220,63 @@ def run_stage4(first_week: int = 1, last_week: int = 24) -> dict[str, pd.DataFra
     for name, df in out.items():
         df.to_csv(RESULTS_DIR / f"stage4_{name}.csv", index=False)
     return out
+
+
+# --------------------------------------------------------------------------------------
+# Stage 5: fairness audit
+# --------------------------------------------------------------------------------------
+
+def run_stage5(n_boot: int = 1000) -> dict[str, pd.DataFrame]:
+    from eew import fairness as Fa
+    from eew import landmark as L
+    from eew import policy as Pol
+
+    pr = landmark_predictions()
+    enr = pd.read_parquet(PROCESSED_DIR / "enrolments.parquet")
+    daily = pd.read_parquet(PROCESSED_DIR / "daily_clicks.parquet")
+    groups = Fa.add_groups(enr)
+    key = ["code_module", "code_presentation", "id_student"]
+    ev = pr[pr["week"].isin(L.EVAL_WEEKS)].merge(groups, on=key)
+
+    def weekly_flags(score):
+        return pd.concat([E.flag_top(g, score, CONTACT_CAPACITY) for _, g in ev.groupby("week")]).reindex(ev.index)
+
+    ev["p_recal_disability"] = Fa.group_recalibrate(ev, "p_landmark_gbm", "disability")
+    f_model, f_recal = weekly_flags("p_landmark_gbm"), weekly_flags("p_recal_disability")
+
+    refs = {"disability": "No declared disability", "imd_quintile": "3 (40-60%)",
+            "age_group": "Under 35", "gender": "M", "education": "A level or equivalent"}
+    metrics = pd.concat([Fa.group_metrics(ev, a, "p_landmark_gbm", f_model, n_boot=n_boot)
+                         for a in Fa.AUDIT_GROUPS], ignore_index=True).assign(score="Stage 3 model")
+    metrics_recal = Fa.group_metrics(ev, "disability", "p_recal_disability", f_recal, n_boot=n_boot).assign(
+        score="Recalibrated by disability")
+    gaps = pd.concat([Fa.gap_vs_reference(ev, a, "p_landmark_gbm", f_model, refs[a], n_boot=n_boot)
+                      for a in Fa.AUDIT_GROUPS], ignore_index=True)
+
+    # Term-long coverage by group (stage 4 policy: 5% weekly capacity, 4-week cool-down).
+    pop = P.early_warning_population(enr)
+    last_active = P.last_activity_day(daily, pop)
+    sc = pr.merge(groups[key + ["disability"]], on=key)
+    sc["p_recal_disability"] = Fa.group_recalibrate(sc, "p_landmark_gbm", "disability")
+    w = pop[pop["withdrawn"]].merge(last_active, left_on=key, right_index=True)
+    w = w[(w["last_active_day"] >= 7) & (w["last_active_day"] < 7 * 25)][key + ["last_active_day"]].merge(groups, on=key)
+    coverage = []
+    for score, name in [("p_landmark_gbm", "Stage 3 model"), ("p_recal_disability", "Recalibrated by disability")]:
+        c = Pol.simulate(sc, score, 0.05, 4, list(range(1, 25)))
+        m = w.merge(c.assign(contact_day=7 * c["week"]), on=key, how="left")
+        m["in_time"] = m["contact_day"] <= m["last_active_day"]
+        reached = m.groupby(key)["in_time"].any().reset_index().merge(groups, on=key)
+        for a in Fa.AUDIT_GROUPS:
+            r = reached.groupby(a)["in_time"].agg(["mean", "size"]).reset_index()
+            coverage.append(r.rename(columns={a: "group", "mean": "reached_before_silence",
+                                              "size": "withdrawers"}).assign(attribute=a, score=name))
+    overall = pd.DataFrame([
+        {"score": n, "recall": float((f & ev["onset"]).sum() / ev["onset"].sum()),
+         "precision": float((f & ev["onset"]).sum() / f.sum())}
+        for n, f in [("Stage 3 model", f_model), ("Recalibrated by disability", f_recal)]
+    ])
+    out = {"group_metrics": pd.concat([metrics, metrics_recal], ignore_index=True), "gaps": gaps,
+           "term_coverage": pd.concat(coverage, ignore_index=True), "overall": overall}
+    for name, df in out.items():
+        df.to_csv(RESULTS_DIR / f"stage5_{name}.csv", index=False)
+    return out

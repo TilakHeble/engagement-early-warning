@@ -9,7 +9,7 @@ would use it: *with limited tutor time, how many future withdrawals do we catch,
 Built on the open [Open University Learning Analytics Dataset (OULAD)](https://research.stem.open.ac.uk/ouanalyse/dataset/)
 (32,593 enrolments, 22 module presentations, 10.6M daily click records). Not affiliated with any company or product.
 
-> Status: stages 1–4 complete. Stages 5–7 in progress.
+> Status: stages 1–5 complete. Stages 6–7 in progress.
 
 ## Findings so far (stage 1)
 
@@ -71,6 +71,21 @@ Full analysis: [`notebooks/03_landmark_onset.ipynb`](notebooks/03_landmark_onset
 
 Full analysis: [`notebooks/04_outreach_policy.ipynb`](notebooks/04_outreach_policy.ipynb).
 
+## Stage 5: fairness audit
+
+![Fairness audit](docs/figures/stage5_fairness.png)
+
+- **Disability: the model understates risk by about a quarter** (calibration 0.75 vs 1.06; the gap's interval
+  excludes 0). Disabled students disengage more often (5.2% vs 3.3%), so they are still flagged and reached
+  slightly more, but the probability a tutor sees is too low.
+- **Older students (35+) and students with a degree are missed 6–8 points more often.** Gender shows no gaps; the
+  most deprived quintile is missed *less*.
+- **Recalibrating by disability fixes the calibration at no cost to overall performance** and raises term coverage
+  of disabled withdrawers from 57% to 74%. It uses a protected characteristic, so it is reported as an
+  institutional choice, not a default.
+
+Full analysis: [`notebooks/05_fairness.ipynb`](notebooks/05_fairness.ipynb).
+
 ## Approach
 
 | Stage | Question |
@@ -79,7 +94,7 @@ Full analysis: [`notebooks/04_outreach_policy.ipynb`](notebooks/04_outreach_poli
 | 2. Research-led features ✅ | Volume, regularity, recency, change from the student's *own* baseline, plus assessment behaviour (late or missed submissions) |
 | 3. Week-by-week risk model ✅ | A discrete-time survival model: risk of withdrawing in each week, using only data available up to that week (no leakage) |
 | 4. Capacity-aware evaluation ✅ | With 10% tutor capacity per week: precision, recall (with bootstrap intervals), and warning time before last activity |
-| 5. Fairness and inclusion audit | Demographics are never model inputs; calibration and miss rates are audited by disability, deprivation (IMD) band and age |
+| 5. Fairness and inclusion audit ✅ | Demographics are never model inputs; calibration and miss rates are audited by disability, deprivation (IMD) band and age |
 | 6. Generalising to new modules | Train on some modules, test on unseen ones: a proxy for rolling out to a new institution |
 | 7. Tutor dashboard | A weekly list of flagged students with a plain-English reason for each flag |
 
