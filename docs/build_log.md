@@ -179,3 +179,15 @@ are judged on warning time before last activity, not just on precision.
 - Checked visually with headless Chrome; fixed clipped warning signs, a squashed chart and raw column names.
   An `AppTest` smoke test runs in CI across modules, weeks and settings.
 - Added `docs/model_card.md`: intended use, data, model, evaluation, limitations and ethics.
+
+## 2026-11-10: repository review and fixes
+
+- **Licence:** MIT for the code; the OULAD data and the derived dashboard snapshot are CC BY 4.0 with attribution.
+- **Reproducibility:** `python -m eew.reproduce` (or `make reproduce`) rebuilds everything from the raw tables:
+  processed data, stages 1–6 results and the dashboard snapshot. Added `run_stage1`, so stage 1 no longer depends
+  on the notebook. A full run took about 13 minutes, and **all 21 results files and the snapshot matched the
+  previous outputs exactly** (maximum numeric difference 0). `make notebooks` re-executes the notebooks.
+- **Dependencies:** removed `lifelines` (never used); added `altair` (dashboard) and `nbconvert` (dev).
+- **README:** rewritten opening around disengagement onset (the original said "risk of withdrawal" and
+  "explainable"; the warning signs are rules, not model explanations). Added a key-results table up front and a
+  tests badge; the approach table now describes what was built, with links to the notebooks.

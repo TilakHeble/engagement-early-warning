@@ -1,15 +1,29 @@
 # Engagement Early-Warning
 
-**Which students need support, and how many weeks before they withdraw can we tell?**
+**Each week, which students are about to stop engaging, and can a support team reach them first?**
 
-An independent research prototype that turns daily virtual learning environment (VLE) activity into
-calibrated, explainable, week-by-week risk of withdrawal, evaluated the way a student-support team
-would use it: *with limited tutor time, how many future withdrawals do we catch, and how early?*
+An independent research prototype on the open
+[Open University Learning Analytics Dataset (OULAD)](https://research.stem.open.ac.uk/ouanalyse/dataset/)
+(32,593 enrolments, 7 modules, 22 presentations, 10.6M daily click records). It predicts **disengagement onset**,
+the point a student goes silent for good on the virtual learning environment (VLE), rather than the official
+withdrawal date, which lags it. Every result is judged the way a student-support team would use it: with limited
+staff time, who is reached, how early, and is it fair? Not affiliated with any company or product.
 
-Built on the open [Open University Learning Analytics Dataset (OULAD)](https://research.stem.open.ac.uk/ouanalyse/dataset/)
-(32,593 enrolments, 22 module presentations, 10.6M daily click records). Not affiliated with any company or product.
+[![tests](https://github.com/TilakHeble/engagement-early-warning/actions/workflows/tests.yml/badge.svg)](https://github.com/TilakHeble/engagement-early-warning/actions/workflows/tests.yml)
+· [Model card](docs/model_card.md) · [Build log: every decision and negative result](docs/build_log.md)
 
-> Status: all seven stages complete. See the [model card](docs/model_card.md).
+## Key results
+
+All results are on held-out module presentations, with 95% bootstrap intervals over cohorts.
+
+| Question | Answer |
+| --- | --- |
+| Can an engagement score alone find students about to leave? | Barely. It mostly flags students who have **already** gone silent, and over a term it does **worse than a random list** (stages 1 and 4) |
+| How well does the model find upcoming disengagement? | It catches **23–28%** of students who will go silent in the next 4 weeks while contacting 10% of the cohort (random: 10%), a median of **1.3–2.3 weeks before** they go silent (stage 3) |
+| What does that mean for a support team over a term? | At 5% weekly capacity it reaches **51%** of withdrawing students before they go silent, against 40% for a random list and 29% for the engagement baseline (stage 4) |
+| Is it fair? | Mostly, with exceptions: risk is **under-predicted by about a quarter for students with a declared disability**, and older and degree-holding students are missed 6–8 points more often (stage 5) |
+| Would it work at a new university? | The **ranking transfers** to unseen modules (−0.9 points). **Probabilities do not** until each module has one completed run (stage 6) |
+| What did not work? | "Drop from the student's own baseline" features added nothing measurable, in both linear and nonlinear models (stages 2 and 3) |
 
 ## Tutor dashboard (stage 7)
 
@@ -25,7 +39,19 @@ pip install -r dashboards/requirements.txt
 streamlit run dashboards/app.py
 ```
 
-## Findings so far (stage 1)
+## Approach
+
+| Stage | What it asks | Notebook |
+| --- | --- | --- |
+| 1. Engagement baseline | How far does a cohort-relative engagement level (none → very high) get you, and is the withdrawal date the right target? | [01](notebooks/01_eda_and_baseline.ipynb) |
+| 2. Research-led features | Do assessment behaviour, regularity, recency and trajectory beat the baseline? Leak-free at every week, with no demographics | [02](notebooks/02_features.ipynb) |
+| 3. Landmark onset model | One model across weeks 1–24 predicting who goes silent for good in the next 4 weeks; calibrated probabilities | [03](notebooks/03_landmark_onset.ipynb) |
+| 4. A term of outreach | Replaying weekly contact lists with a capacity and cool-down: who is reached before they go silent, at what workload? | [04](notebooks/04_outreach_policy.ipynb) |
+| 5. Fairness audit | Miss rates and calibration by disability, deprivation, age, gender and prior education; one mitigation option | [05](notebooks/05_fairness.ipynb) |
+| 6. Transfer | Unseen modules, forward in time, and one-run local recalibration: would it work at a new university? | [06](notebooks/06_transfer.ipynb) |
+| 7. Tutor dashboard | The weekly list, capacity planning and the evidence, in one deployable app | [app](dashboards/app.py) |
+
+## Stage 1: what a descriptive engagement score can and cannot do
 
 ![Baseline precision](docs/figures/baseline_precision.png)
 
@@ -115,18 +141,6 @@ Full analysis: [`notebooks/05_fairness.ipynb`](notebooks/05_fairness.ipynb).
 
 Full analysis: [`notebooks/06_transfer.ipynb`](notebooks/06_transfer.ipynb).
 
-## Approach
-
-| Stage | Question |
-| --- | --- |
-| 1. Engagement-band baseline ✅ | How far does a simple "engagement level" (none → very high, relative to the cohort) get you? |
-| 2. Research-led features ✅ | Volume, regularity, recency, change from the student's *own* baseline, plus assessment behaviour (late or missed submissions) |
-| 3. Week-by-week risk model ✅ | A discrete-time survival model: risk of withdrawing in each week, using only data available up to that week (no leakage) |
-| 4. Capacity-aware evaluation ✅ | With 10% tutor capacity per week: precision, recall (with bootstrap intervals), and warning time before last activity |
-| 5. Fairness and inclusion audit ✅ | Demographics are never model inputs; calibration and miss rates are audited by disability, deprivation (IMD) band and age |
-| 6. Generalising to new modules ✅ | Train on some modules, test on unseen ones: a proxy for rolling out to a new institution |
-| 7. Tutor dashboard ✅ | A weekly list of flagged students with a plain-English reason for each flag |
-
 ## Getting the data
 
 1. Download `anonymisedData.zip` from the [OU Analyse dataset page](https://research.stem.open.ac.uk/ouanalyse/dataset/),
@@ -154,7 +168,12 @@ python -m eew.data
 pytest -q
 ```
 
-Then open the notebooks in `notebooks/`.
+To regenerate every results file from the raw data, then re-run the notebooks:
+
+```bash
+make reproduce     # or: python -m eew.reproduce   (about 15-20 minutes)
+make notebooks
+```
 
 ## Project layout
 
@@ -167,7 +186,7 @@ results/        metrics (CSV)
 tests/          unit tests
 ```
 
-## Data licence and citation
+## Licence and citation
 
-OULAD is released under CC BY 4.0. Kuzilek, J., Hlosta, M. & Zdrahal, Z. (2017). Open University
+Code: MIT ([LICENSE](LICENSE)). Data: OULAD is released under CC BY 4.0. Kuzilek, J., Hlosta, M. & Zdrahal, Z. (2017). Open University
 Learning Analytics dataset. *Scientific Data* 4, 170171. https://doi.org/10.1038/sdata.2017.171

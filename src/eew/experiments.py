@@ -93,6 +93,23 @@ if __name__ == "__main__":
 # Stage 3: landmark model of disengagement onset
 # --------------------------------------------------------------------------------------
 
+def run_stage1(n_boot: int = 1000) -> pd.DataFrame:
+    """Stage 1 baselines (engagement band, cumulative clicks), as in notebook 01."""
+    enr, daily, _, _ = load_inputs()
+    pop = P.early_warning_population(enr)
+    last_active = P.last_activity_day(daily, pop)
+    rows = []
+    for week in PREDICTION_WEEKS:
+        df = P.add_last_activity(B.baseline_scores(daily, P.at_risk(pop, week), week), last_active)
+        for target in TARGETS:
+            for score, name in [("risk_band7", "Engagement band (7-day)"), ("risk_cum", "Cumulative clicks")]:
+                rows.append({"week": week, "target": target, "baseline": name,
+                             **E.capacity_metrics(df, score, CONTACT_CAPACITY, target, n_boot)})
+    out = pd.DataFrame(rows)
+    out.to_csv(RESULTS_DIR / "baseline_metrics.csv", index=False)
+    return out
+
+
 def build_landmark_data(cache: bool = True) -> pd.DataFrame:
     """Stack landmark weeks 1-24 with features and onset labels (cached as parquet)."""
     from eew import landmark as L
