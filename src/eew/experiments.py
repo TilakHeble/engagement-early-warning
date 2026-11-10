@@ -163,3 +163,60 @@ def run_stage3(n_boot: int = 1000) -> dict[str, pd.DataFrame]:
     for name, df in out.items():
         df.to_csv(RESULTS_DIR / f"stage3_{name}.csv", index=False)
     return out
+
+
+# --------------------------------------------------------------------------------------
+# Stage 4: term-long outreach simulation
+# --------------------------------------------------------------------------------------
+
+def landmark_predictions(cache: bool = True) -> pd.DataFrame:
+    """Out-of-fold stage 3 scores for every landmark week (cached)."""
+    from eew import landmark as L
+
+    path = PROCESSED_DIR / "landmark_predictions.parquet"
+    if cache and path.exists():
+        return pd.read_parquet(path)
+    data = build_landmark_data()
+    data["p_landmark_gbm"] = L.oof_landmark(data, F.FEATURES, "onset", "gbm")
+    keep = ["code_module", "code_presentation", "id_student", "week", "onset", "already_silent",
+            "will_withdraw", "needs_support", "risk_cum", "p_landmark_gbm"]
+    out = data[keep]
+    out.to_parquet(path, index=False)
+    return out
+
+
+def run_stage4(first_week: int = 1, last_week: int = 24) -> dict[str, pd.DataFrame]:
+    from eew import policy as Pol
+
+    scores = landmark_predictions()
+    scores = scores.assign(random=np.random.default_rng(0).random(len(scores)))
+    enr = pd.read_parquet(PROCESSED_DIR / "enrolments.parquet")
+    daily = pd.read_parquet(PROCESSED_DIR / "daily_clicks.parquet")
+    pop = P.early_warning_population(enr)
+    last_active = P.last_activity_day(daily, pop)
+    weeks = list(range(first_week, last_week + 1))
+
+    names = {"p_landmark_gbm": "Stage 3 model", "risk_cum": "Baseline: cumulative clicks",
+             "random": "Random"}
+    def run(score, capacity, cooldown):
+        c = Pol.simulate(scores, score, capacity, cooldown, weeks)
+        return {"score": names[score], "capacity": capacity, "cooldown_weeks": cooldown,
+                **Pol.summarise(c, pop, last_active, first_week, last_week)}
+
+    # Workload curves: each score across capacities, with a 4-week cool-down.
+    curves = pd.DataFrame([run(s, cap, 4) for s in names
+                           for cap in [0.01, 0.025, 0.05, 0.075, 0.10, 0.15, 0.20]])
+    # Cool-down sensitivity for the model at 5% weekly capacity.
+    cooldowns = pd.DataFrame([run("p_landmark_gbm", 0.05, cd) for cd in [0, 1, 2, 4, 8, 12]])
+    # Paired bootstrap of coverage differences at realistic capacities.
+    diffs = []
+    for capacity in [0.025, 0.05, 0.10]:
+        per = {s: Pol.reached_by_presentation(Pol.simulate(scores, s, capacity, 4, weeks),
+                                              pop, last_active, first_week, last_week) for s in names}
+        for other in ["random", "risk_cum"]:
+            diffs.append({"capacity": capacity, "compared_with": names[other],
+                          **Pol.paired_coverage_difference(per["p_landmark_gbm"], per[other])})
+    out = {"curves": curves, "cooldowns": cooldowns, "differences": pd.DataFrame(diffs)}
+    for name, df in out.items():
+        df.to_csv(RESULTS_DIR / f"stage4_{name}.csv", index=False)
+    return out

@@ -107,3 +107,21 @@ are judged on warning time before last activity, not just on precision.
   - Trajectory and recency retested in the nonlinear model: no gain (within ±0.3 pp, intervals include 0).
     The stage 2 negative result stands.
 - **Chosen stage 3 model:** landmark gradient boosting, with landmark logistic as the interpretable comparator.
+
+## 2026-11-10: stage 4, term-long outreach simulation (`notebooks/04_outreach_policy.ipynb`)
+
+- `src/eew/policy.py` replays weekly outreach over weeks 1–24 using held-out stage 3 scores. Each week it contacts
+  the top `capacity` share of each cohort, skipping anyone contacted within the cool-down. The headline measure is
+  the share of withdrawing students contacted on or before their last VLE activity ("reached before silence").
+  No intervention effect is modelled.
+- Scope: 5,137 withdrawing students whose last activity falls in weeks 1–24.
+- **Results (4-week cool-down):**
+  - 2.5%/week: model 33%, random 22%, baseline 14%. 5%/week: model 51%, random 40%, baseline 29%.
+  - Paired bootstrap gain over random: +10.7 pp [8.2, 13.5] at 2.5%; +10.9 [8.3, 13.7] at 5%; +8.1 [5.9, 10.7]
+    at 10%. Over the baseline: +17 to +22 pp.
+  - **The baseline is worse than random over a term:** it keeps cycling through the same low-activity students.
+    Its contacts are, however, 70–85% fail-or-withdraw, so it suits academic support rather than retention.
+  - High capacity hides differences: at 10%/week, 77% of all students are contacted at least once.
+  - **Cool-down sensitivity** (model, 5%/week): 0 weeks → 30% reached; 4 → 51%; 12 → 61%. Contacts reaching a
+    student who withdraws fall from 32% to 20%. This is a breadth-vs-focus policy choice.
+- Caveat recorded: the policy settings were explored on the same data as the evaluation (scores are out-of-fold).

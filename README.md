@@ -9,7 +9,7 @@ would use it: *with limited tutor time, how many future withdrawals do we catch,
 Built on the open [Open University Learning Analytics Dataset (OULAD)](https://research.stem.open.ac.uk/ouanalyse/dataset/)
 (32,593 enrolments, 22 module presentations, 10.6M daily click records). Not affiliated with any company or product.
 
-> Status: stages 1–3 complete. Stages 4–7 in progress.
+> Status: stages 1–4 complete. Stages 5–7 in progress.
 
 ## Findings so far (stage 1)
 
@@ -57,6 +57,20 @@ Full analysis: [`notebooks/02_features.ipynb`](notebooks/02_features.ipynb).
 
 Full analysis: [`notebooks/03_landmark_onset.ipynb`](notebooks/03_landmark_onset.ipynb).
 
+## Stage 4: a term of outreach
+
+![Coverage vs workload](docs/figures/stage4_coverage_curve.png)
+
+- **Simulates a support team over weeks 1–24:** each week it contacts its top-risk students, with a cool-down before
+  re-contacting anyone. The measure is the share of withdrawing students reached *before they went silent*.
+- **At realistic capacity the model reaches about 11 more students in every 100** than a random list (33% vs 22% at
+  2.5% of each cohort per week; 51% vs 40% at 5%; paired intervals of roughly 8–14 points).
+- **The engagement baseline does worse than random** over a term, because it keeps returning to students who have
+  already gone. It is better suited to academic support (70–85% of its contacts fail or withdraw).
+- **The cool-down matters as much as the model:** with no cool-down, 5% weekly capacity reaches only 30%.
+
+Full analysis: [`notebooks/04_outreach_policy.ipynb`](notebooks/04_outreach_policy.ipynb).
+
 ## Approach
 
 | Stage | Question |
@@ -64,7 +78,7 @@ Full analysis: [`notebooks/03_landmark_onset.ipynb`](notebooks/03_landmark_onset
 | 1. Engagement-band baseline ✅ | How far does a simple "engagement level" (none → very high, relative to the cohort) get you? |
 | 2. Research-led features ✅ | Volume, regularity, recency, change from the student's *own* baseline, plus assessment behaviour (late or missed submissions) |
 | 3. Week-by-week risk model ✅ | A discrete-time survival model: risk of withdrawing in each week, using only data available up to that week (no leakage) |
-| 4. Capacity-aware evaluation | With 10% tutor capacity per week: precision, recall (with bootstrap intervals), and warning time before last activity |
+| 4. Capacity-aware evaluation ✅ | With 10% tutor capacity per week: precision, recall (with bootstrap intervals), and warning time before last activity |
 | 5. Fairness and inclusion audit | Demographics are never model inputs; calibration and miss rates are audited by disability, deprivation (IMD) band and age |
 | 6. Generalising to new modules | Train on some modules, test on unseen ones: a proxy for rolling out to a new institution |
 | 7. Tutor dashboard | A weekly list of flagged students with a plain-English reason for each flag |
