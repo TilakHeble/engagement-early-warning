@@ -12,7 +12,7 @@ staff time, who is reached, how early, and is it fair? Not affiliated with any c
 [![Open the live dashboard](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://engagement-early-warning.streamlit.app/)
 **Live dashboard: [engagement-early-warning.streamlit.app](https://engagement-early-warning.streamlit.app/)**
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://engagement-early-warning.streamlit.app/) [![tests](https://github.com/TilakHeble/engagement-early-warning/actions/workflows/tests.yml/badge.svg)](https://github.com/TilakHeble/engagement-early-warning/actions/workflows/tests.yml)
+[![tests](https://github.com/TilakHeble/engagement-early-warning/actions/workflows/tests.yml/badge.svg)](https://github.com/TilakHeble/engagement-early-warning/actions/workflows/tests.yml)
 
 **[Live dashboard](https://engagement-early-warning.streamlit.app/)** · [Model card](docs/model_card.md) · [Build log: every decision and negative result](docs/build_log.md)
 
