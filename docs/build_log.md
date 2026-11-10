@@ -84,3 +84,26 @@ are judged on warning time before last activity, not just on precision.
   model. Recorded as not supported; to be retested in the stage 3 time-to-event model.
 - Coefficients saved (`results/stage2_coefficients.csv`) but not interpreted: correlated features (e.g.
   active_share and its cohort percentile) give unstable, opposite-signed coefficients.
+
+## 2026-11-10: stage 3, landmark model of disengagement onset (`notebooks/03_landmark_onset.ipynb`)
+
+- **Reframed target.** The event is now *disengagement onset*: a withdrawing student's last VLE activity falls
+  within the next 4 weeks. Students already permanently silent count as negatives (in practice they look like
+  students on a break, and the goal is warning before silence). `last_active_day` is used only for labels.
+- **Context check.** A 2026 OULAD survival benchmark (arXiv:2604.08870) used the unregistration date as the event,
+  split by student (shared modules across train and test), reported no capacity or lead-time metrics, and left
+  landmarking to future work. This stage addresses all four.
+- **Model.** One pooled "landmark super-model" over weeks 1–24 (616,946 student-weeks; 2.9% events), with spline
+  week terms plus feature-by-week interactions (logistic), and gradient boosting with week as a feature.
+  5-fold CV grouped by presentation.
+- **Results** (weeks 4–12, 10% capacity):
+  - Gradient boosting catches 23–28% of upcoming disengagements (random would catch 10%; AUC 0.69–0.72), a median
+    of 1.3–2.3 weeks before the student goes silent.
+  - The baseline falls to about random from week 8: low engagement marks students already gone, not those about to go.
+  - Against the stage 2 model, precision rises only +1.0–1.1 pp (paired intervals exclude 0 at weeks 8 and 12 only).
+    Ranking gains are small. The main gains are calibration (predicted vs observed within about 1 point per
+    decile; the stage 2 scores are 5–38% where onset rates are 1–9%) and fewer contacts wasted on already-silent
+    students (6–8% vs 9–13%).
+  - Trajectory and recency retested in the nonlinear model: no gain (within ±0.3 pp, intervals include 0).
+    The stage 2 negative result stands.
+- **Chosen stage 3 model:** landmark gradient boosting, with landmark logistic as the interpretable comparator.

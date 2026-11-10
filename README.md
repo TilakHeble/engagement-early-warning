@@ -9,7 +9,7 @@ would use it: *with limited tutor time, how many future withdrawals do we catch,
 Built on the open [Open University Learning Analytics Dataset (OULAD)](https://research.stem.open.ac.uk/ouanalyse/dataset/)
 (32,593 enrolments, 22 module presentations, 10.6M daily click records). Not affiliated with any company or product.
 
-> Status: stages 1–2 complete. Stages 3–7 in progress.
+> Status: stages 1–3 complete. Stages 4–7 in progress.
 
 ## Findings so far (stage 1)
 
@@ -43,13 +43,27 @@ decision is in [`docs/build_log.md`](docs/build_log.md).
 
 Full analysis: [`notebooks/02_features.ipynb`](notebooks/02_features.ipynb).
 
+## Stage 3: predicting disengagement *before* it happens
+
+![Stage 3 comparison](docs/figures/stage3_onset_comparison.png)
+
+- **New target: disengagement onset.** Each week, which students will go silent for good in the next 4 weeks?
+  This avoids rewarding flags on students who have already left (official withdrawal lags last activity).
+- **One landmark model across weeks 1–24** (617k student-weeks), validated with whole presentations held out.
+- **Catches 23–28% of upcoming disengagements at 10% capacity** (random: 10%), a median of 1.3–2.3 weeks ahead.
+  The engagement baseline falls to about random on this target.
+- **Calibrated probabilities**: predicted and observed risk agree within about 1 point in every decile, which is
+  what a tutor-facing risk score needs. The ranking gain over stage 2 is small (+1 pp, significant at weeks 8 and 12).
+
+Full analysis: [`notebooks/03_landmark_onset.ipynb`](notebooks/03_landmark_onset.ipynb).
+
 ## Approach
 
 | Stage | Question |
 | --- | --- |
 | 1. Engagement-band baseline ✅ | How far does a simple "engagement level" (none → very high, relative to the cohort) get you? |
 | 2. Research-led features ✅ | Volume, regularity, recency, change from the student's *own* baseline, plus assessment behaviour (late or missed submissions) |
-| 3. Week-by-week risk model | A discrete-time survival model: risk of withdrawing in each week, using only data available up to that week (no leakage) |
+| 3. Week-by-week risk model ✅ | A discrete-time survival model: risk of withdrawing in each week, using only data available up to that week (no leakage) |
 | 4. Capacity-aware evaluation | With 10% tutor capacity per week: precision, recall (with bootstrap intervals), and warning time before last activity |
 | 5. Fairness and inclusion audit | Demographics are never model inputs; calibration and miss rates are audited by disability, deprivation (IMD) band and age |
 | 6. Generalising to new modules | Train on some modules, test on unseen ones: a proxy for rolling out to a new institution |
