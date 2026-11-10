@@ -164,3 +164,18 @@ are judged on warning time before last activity, not just on precision.
   indicative.
 - **Deployment recommendation:** use the ranked list from day one; treat probabilities as provisional until each
   module has one completed run; then recalibrate per module with shrinkage.
+
+## 2026-11-10: stage 7, tutor dashboard (`dashboards/app.py`)
+
+- Standalone Streamlit app (no imports from `eew`, for easy deployment) on a 6.6 MB snapshot: the 2014
+  presentations, weeks 1–24, with held-out stage 3 scores (`python -m eew.dashboard_data`).
+- **This week's list:** replays weekly outreach with capacity and cool-down for the selected module, showing risk
+  and up to three warning signs. A demo toggle reveals what actually happened.
+- **Warning signs are transparent rules** (missed/late assessments, low released scores, silence, bottom-20%
+  recent activity, halved activity, few active days). They are labelled as conversation prompts, not the model's
+  reasoning. Tests cover the rules.
+- **Planning tab:** stage 4 coverage-vs-workload curves and cool-down trade-offs. **Trust tab:** performance by week,
+  the fairness table (with the disability under-prediction called out), and transfer results.
+- Checked visually with headless Chrome; fixed clipped warning signs, a squashed chart and raw column names.
+  An `AppTest` smoke test runs in CI across modules, weeks and settings.
+- Added `docs/model_card.md`: intended use, data, model, evaluation, limitations and ethics.

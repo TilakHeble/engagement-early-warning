@@ -9,7 +9,21 @@ would use it: *with limited tutor time, how many future withdrawals do we catch,
 Built on the open [Open University Learning Analytics Dataset (OULAD)](https://research.stem.open.ac.uk/ouanalyse/dataset/)
 (32,593 enrolments, 22 module presentations, 10.6M daily click records). Not affiliated with any company or product.
 
-> Status: stages 1–6 complete. Stage 7 (tutor dashboard) in progress.
+> Status: all seven stages complete. See the [model card](docs/model_card.md).
+
+## Tutor dashboard (stage 7)
+
+![Dashboard](docs/figures/dashboard.png)
+
+A Streamlit app ([`dashboards/app.py`](dashboards/app.py)) showing each week's contact list for a module (risk plus
+plain-English warning signs, with a cool-down so recently contacted students are skipped), capacity planning, and
+the evidence on performance, fairness and transfer. It runs on a small committed snapshot, so it deploys without the
+raw data:
+
+```bash
+pip install -r dashboards/requirements.txt
+streamlit run dashboards/app.py
+```
 
 ## Findings so far (stage 1)
 
@@ -111,7 +125,7 @@ Full analysis: [`notebooks/06_transfer.ipynb`](notebooks/06_transfer.ipynb).
 | 4. Capacity-aware evaluation ✅ | With 10% tutor capacity per week: precision, recall (with bootstrap intervals), and warning time before last activity |
 | 5. Fairness and inclusion audit ✅ | Demographics are never model inputs; calibration and miss rates are audited by disability, deprivation (IMD) band and age |
 | 6. Generalising to new modules ✅ | Train on some modules, test on unseen ones: a proxy for rolling out to a new institution |
-| 7. Tutor dashboard | A weekly list of flagged students with a plain-English reason for each flag |
+| 7. Tutor dashboard ✅ | A weekly list of flagged students with a plain-English reason for each flag |
 
 ## Getting the data
 
@@ -145,10 +159,10 @@ Then open the notebooks in `notebooks/`.
 ## Project layout
 
 ```
-src/eew/        package code: data loading, population rules, baselines, evaluation
+src/eew/        package code: data, features, models, evaluation, policy, fairness, transfer
 notebooks/      numbered analysis notebooks
-dashboards/     Streamlit tutor dashboard (stage 7)
-docs/           build log and figures
+dashboards/     Streamlit tutor dashboard and its data snapshot
+docs/           model card, build log and figures
 results/        metrics (CSV)
 tests/          unit tests
 ```
