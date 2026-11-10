@@ -9,8 +9,10 @@ the point a student goes silent for good on the virtual learning environment (VL
 withdrawal date, which lags it. Every result is judged the way a student-support team would use it: with limited
 staff time, who is reached, how early, and is it fair? Not affiliated with any company or product.
 
+[![Open the live dashboard](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://engagement-early-warning.streamlit.app/)
 [![tests](https://github.com/TilakHeble/engagement-early-warning/actions/workflows/tests.yml/badge.svg)](https://github.com/TilakHeble/engagement-early-warning/actions/workflows/tests.yml)
-· [Model card](docs/model_card.md) · [Build log: every decision and negative result](docs/build_log.md)
+
+**[Live dashboard](https://engagement-early-warning.streamlit.app/)** · [Model card](docs/model_card.md) · [Build log: every decision and negative result](docs/build_log.md)
 
 ## Key results
 
@@ -27,7 +29,9 @@ All results are on held-out module presentations, with 95% bootstrap intervals o
 
 ## Tutor dashboard (stage 7)
 
-![Dashboard](docs/figures/dashboard.png)
+**Try it: [engagement-early-warning.streamlit.app](https://engagement-early-warning.streamlit.app/)**
+
+[![Dashboard](docs/figures/dashboard.png)](https://engagement-early-warning.streamlit.app/)
 
 A Streamlit app ([`dashboards/app.py`](dashboards/app.py)) showing each week's contact list for a module (risk plus
 plain-English warning signs, with a cool-down so recently contacted students are skipped), capacity planning, and

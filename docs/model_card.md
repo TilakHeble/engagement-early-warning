@@ -1,6 +1,7 @@
 # Model card: Engagement Early-Warning (disengagement onset)
 
 **Status:** research prototype on open data. Not a production system and not affiliated with any company or product.
+**Live demo:** https://engagement-early-warning.streamlit.app/
 
 ## What it predicts
 Each week of a module, for each student still enrolled: the probability that the student goes silent for good on the
